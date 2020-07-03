@@ -1,5 +1,5 @@
 <template>
-  <div class="main">
+  <div class="editor">
     <editor-menu-bar :editor="editor" v-slot:default="editorParams">
       <div class="editor-toolbar">
         <div class="btn-toolbar p-1" role="toolbar" aria-label="Editor Toolbar">
@@ -46,10 +46,11 @@
   import { Component, Vue, Mixins, Prop } from 'vue-property-decorator';
   // @ts-ignore
   import { Editor, EditorContent, EditorMenuBar } from 'tiptap';
-  // eslint-disable-next-line max-len
-  // prettier-ignore
+  import {
+    Heading, Bold, Underline, Image, HardBreak, OrderedList,
+    ListItem, Code, Italic, Link, Strike, BulletList, History, Placeholder
   // @ts-ignore
-  import { Heading, Bold, Underline, Image, HardBreak, OrderedList, ListItem, Code, Italic, Link, Strike, BulletList, History } from 'tiptap-extensions';
+  } from 'tiptap-extensions';
 
   import EditorMenuButton from './EditorMenuButton.vue';
 
@@ -59,12 +60,14 @@
     components: { Editor, EditorContent, EditorMenuButton, EditorMenuBar },
   })
   export default class EditField extends Vue {
-    @Prop({ default: 'Type here...' }) private content!: string;
+    // TODO i18n
+    @Prop({ default: '' }) readonly content!: string;
 
     get editor() {
       const parent = this;
       return new Editor({
         content: this.content,
+        // @ts-ignore
         onUpdate: ({ getHTML }) => {
           parent.$emit('input', getHTML());
         },
@@ -82,6 +85,13 @@
           new Strike(),
           new Underline(),
           new History(),
+          new Placeholder({
+            emptyEditorClass: 'is-editor-empty',
+            emptyNodeClass: 'is-empty',
+            emptyNodeText: 'Type your message...',
+            showOnlyWhenEditable: true,
+            showOnlyCurrent: true,
+          }),
         ],
       });
     }
@@ -94,7 +104,7 @@
 <style lang="scss" scoped>
   @import '~@fortawesome/fontawesome-free/css/all.css';
 
-  .main {
+  .editor {
     background-color: rgba(16, 16, 16, 0.5);
   }
   .btn-light {
@@ -123,47 +133,17 @@
     text-align: initial;
   }
 
-  .editor {
-    position: relative;
-    &__floating-menu {
-      position: absolute;
-      z-index: 1;
-      margin-top: -11.25px;
-      margin-left: 15px;
-      visibility: hidden;
-      opacity: 0;
-      transition: opacity 0.2s, visibility 0.2s;
-      &.is-active {
-        opacity: 1;
-        visibility: visible;
-      }
-    }
+  .editor ::v-deep p.is-empty:first-child::before {
+    content: attr(data-empty-text);
+    float: left;
+    color: #aaa;
+    pointer-events: none;
+    height: 0;
+    font-style: italic;
+  }
 
-    .menububble {
-      position: absolute;
-      display: flex;
-      z-index: 20;
-      margin-bottom: 7.5px;
-      transform: translateX(-50%);
-      visibility: hidden;
-      opacity: 0;
-      transition: opacity 0.2s, visibility 0.2s;
-
-      &.is-active {
-        opacity: 1;
-        visibility: visible;
-      }
-
-      &__form {
-        display: flex;
-        align-items: center;
-      }
-
-      &__input {
-        font: inherit;
-        border: none;
-        background: transparent;
-      }
-    }
+  .editor ::v-deep p {
+    margin-bottom: 0;
+    padding-bottom: 1rem;
   }
 </style>

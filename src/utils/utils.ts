@@ -1,9 +1,47 @@
+import DefaultAvatar from '@/assets/navbar/DefaultIcon.svg';
+import { NotificationItem } from '@/types/common-types';
+
 export default {
-  getPuzzleMiddleThumbnail(nid: string) {
-    return `https://s3.amazonaws.com/eterna/puzzle_mid_thumbnails/thumbnail${nid}.png`;
+  isExternal(link: string) {
+    return !(link.startsWith('/') || link.startsWith('https://eternagame.org/'));
+  },
+  getPuzzleMiddleThumbnail(nid: string | null) {
+    // return `https://s3.amazonaws.com/eterna/puzzle_mid_thumbnails/thumbnail${nid}.png`;
+    return (
+      nid &&
+      `https://renderv2-prod-renderv2bucket86ab868d-1aq5x6e32xf92.s3.amazonaws.com/puzzle_mid_thumbnails/thumbnail${nid}.svg`
+    );
   },
   getPuzzleCloudThumbnail(nid: string) {
     return `https://s3.amazonaws.com/eterna/puzzle_cloud_thumbnails/thumbnail${nid}.png`;
+  },
+  strippedBody(text: string): string {
+    // For notification previews, remove all html tags,
+    // since tags like <ul> and <img> can break formatting.
+    return text && text.replace(/(<([^>]+)>)/gi, '');
+  },
+  formattedType(notification: NotificationItem): string {
+    if (!notification) return '';
+    const formatted = notification.type.toUpperCase();
+    if (formatted === 'BLOGS') {
+      // Unpluralize, since it sounds better
+      return 'BLOG';
+    }
+    return formatted;
+  },
+  typeColor(notification: NotificationItem | {type: string} | null): string | null {
+    if (!notification) return null;
+    switch (notification.type.toLowerCase()) {
+      case 'blogs':
+        return '#53b64e';
+      case 'labs':
+        return '#50b2dc';
+      case 'announcements':
+      case 'news':
+        return '#f39c12';
+      default:
+        return '#53b64e';
+    }
   },
   getPuzzleLink(key: string) {
     switch (key) {
@@ -65,7 +103,7 @@ export default {
         return `${process.env.VUE_APP_API_BASE_URL}/web/script/create/`;
       case 'side_quest_covid19_potd':
         // return 'https://eternagame.org/web/playerpuzzles/?search=:COVID19&sort=solved';
-        return '/puzzles/?search=COVID19&sort=solved';
+        return '/puzzles/?search=:COVID19&sort=solved';
       default:
         return null;
     }
@@ -97,15 +135,23 @@ export default {
         return `${process.env.VUE_APP_API_BASE_URL}/web/script/`;
       case 'side_quest_covid19_potd':
         // return 'https://eternagame.org/web/playerpuzzles/?search=:COVID19&sort=solved';
-        return '/puzzles/?search=COVID19&sort=solved';
+        return '/puzzles/?search=:COVID19&sort=solved';
       default:
         return null;
     }
     return null;
   },
-  isLinkInternal(link: string) {
-    return link.startsWith('/')
-      && !link.startsWith('/web/')
-      && !link.startsWith('/game/');
+  isLinkInternal(link: string | Object) {
+    return (
+      link instanceof Object ||
+      (link.startsWith('/') &&
+        !link.startsWith('/web/') &&
+        !link.startsWith('/game/') &&
+        !link.endsWith('.php'))
+    );
+  },
+  getAvatar(uri: string | null) {
+    if (uri) return /^http/i.exec(uri) ? uri : `/${uri}`;
+    return DefaultAvatar;
   },
 };

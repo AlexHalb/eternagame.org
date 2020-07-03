@@ -49,7 +49,7 @@ export default function createRouter() {
       {
         path: '/',
         name: 'landing',
-        component: () => import('./views/landing/LandingPage.vue'),
+        component: () => import('./views/home/Home.vue'),
       },
       {
         path: '/about',
@@ -60,6 +60,11 @@ export default function createRouter() {
         path: '/help',
         name: 'quick-help',
         component: () => import('./views/help/QuickHelp.vue'),
+      },
+      {
+        path: '/about/software',
+        name: 'software',
+        component: () => import('./views/software/SoftwareExplore.vue'),
       },
       {
         path: '/about/terms',
@@ -84,12 +89,12 @@ export default function createRouter() {
       {
         path: '/about/publications',
         name: 'publications-list',
-        component: () => import('./views/publications/PubsExplore.vue'),
+        component: () => import('./views/publications/PublicationsExplore.vue'),
       },
       {
         path: '/feed',
         name: 'activity-feed',
-        component: () => import('./views/news/ActivityFeed/ActivityFeed.vue'),
+        component: () => import('./views/feed/ActivityFeed/ActivityFeed.vue'),
       },
       {
         path: '/players/:uid',
@@ -117,7 +122,23 @@ export default function createRouter() {
         component: () => import('./views/chat/FullPageChat.vue'),
       },
     ],
+    scrollBehavior(to, from, savedPosition) {
+      // Navigate to previous scroll position, or else top of page
+      // https://router.vuejs.org/guide/advanced/scroll-behavior.html
+      if (savedPosition) {
+        return savedPosition;
+      }
+
+      if (to.hash) {
+        return { selector: to.hash };
+      }
+      
+      if(to.params.keepScroll) return null;
+
+      return { x: 0, y: 0 };
+    },
   });
+  
 
   router.beforeEach(async (to: Route, from: Route, next: RouteCallback<any>) => {
     const userStore = router.app.$vxm.user;
@@ -131,6 +152,7 @@ export default function createRouter() {
   });
 
   router.afterEach(() => {
+    // @ts-ignore
     gtag('config', 'UA-17383892-2');
   });
 

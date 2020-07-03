@@ -17,25 +17,20 @@
 <script lang="ts">
   import { Component, Prop, Vue } from 'vue-property-decorator';
   import defaultImage from '@/assets/ribosome_challenge_bg.png';
-  import VueDOMPurifyHTML from 'vue-dompurify-html';
   import { LabData } from '../types';
-
-  Vue.use(VueDOMPurifyHTML);
 
   @Component({
     components: {},
   })
   export default class LabConclusion extends Vue {
-    @Prop()
-    private lab!: LabData;
+    @Prop({ required: true }) readonly lab!: LabData;
 
-    @Prop({ default: '250px' })
-    private height!: string;
+    @Prop({ default: '250px' }) readonly height!: string;
 
     private readMore = false;
 
     get descriptionToShow() {
-      return this.readMore ? this.lab.conclusion : this.lab.conclusion.substr(0, 1000);
+      return this.readMore ? this.lab.conclusion : this.lab?.conclusion?.substr(0, 1000);
     }
 
     get defaultImage() {

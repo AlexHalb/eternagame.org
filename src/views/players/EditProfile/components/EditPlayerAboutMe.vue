@@ -4,7 +4,7 @@
       <!-- div class="col-md-8"-->
       <div class="col-md-12">
         <h4 class="about-me">{{ $t('player-view:about-me') }}</h4>
-        <EditField :content="user.Profile" @input="setProfile" />
+        <EditField :content="aboutMeText" @input="setProfile" />
         <!--EditPlayerNewSection v-show="addingSection" @set-section="setSection" />
         <b-button
           style="margin-top:19px;"
@@ -24,27 +24,18 @@
 <script lang="ts">
   import { Component, Vue, Prop } from 'vue-property-decorator';
   import EditField from '@/components/Common/EditField.vue';
-  import VueDOMPurifyHTML from 'vue-dompurify-html';
   import { UserData } from '@/types/common-types';
   import EditPlayerFeaturedAchievement from './EditPlayerFeaturedAchievement.vue';
   import EditPlayerNewSection from './EditPlayerNewSection.vue';
-
-  Vue.use(VueDOMPurifyHTML);
 
   @Component({
     components: { EditPlayerFeaturedAchievement, EditField, EditPlayerNewSection },
   })
   export default class PlayerAboutMe extends Vue {
-    get user() {
-      return this.$vxm.user.userDetails;
-    }
+    private aboutMeText = this.$vxm.user.userDetails?.Profile;
 
-    mounted() {
-      this.setProfile(this.$vxm.user.userDetails.Profile);
-    }
-
-    setProfile(text: string) {
-      this.$emit('set-profile', text);
+    setProfile(text: string | undefined) {
+      if (text) this.$emit('set-profile', text);
     }
 
     setSection(section: object) {

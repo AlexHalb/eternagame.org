@@ -5,21 +5,19 @@
 </template>
 
 <script lang="ts">
-  import { Component, Vue } from 'vue-property-decorator';
+  import { Component, Vue, Ref } from 'vue-property-decorator';
   import EternaPage from '@/components/PageLayout/EternaPage.vue';
-  import { Chat } from 'eterna-chat';
+  import { Chat } from 'eterna-chat-wrapper';
 
   @Component({
     components: { EternaPage },
   })
   export default class FullPageChat extends Vue {
-    $refs!: {
-      chatContainer: HTMLElement
-    };
+    @Ref() readonly chatContainer!: HTMLElement;
 
     mounted() {
       const chat = new Chat({
-        container: this.$refs.chatContainer,
+        container: this.chatContainer,
         username: this.$vxm.user.username ? this.$vxm.user.username : '',
         uid: this.$vxm.user.uid ? this.$vxm.user.uid.toString() : '0',
         onHidden: () => {},
@@ -50,7 +48,7 @@
   #full-page-chat-container .arrow {
     display: none;
   }
-
+  
   @media (max-height: 730px) {
     #full-page-chat-container {
       height:calc(100vh - 225px);

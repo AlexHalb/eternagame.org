@@ -1,8 +1,13 @@
 <template>
-  <EternaPage v-if="puzzle" :title="puzzle.title">
+  <!--
+    Tacking on the `&& puzzle` just to make our lives easier with typing,
+    as TS doesn't know that fetchState.firstFetchComplete correlates to it being filled out
+  -->
+  <EternaPage v-if="fetchState.firstFetchComplete && puzzle" :title="puzzle.title">
     <div class="page-content">
-      <div class="d-flex flex-wrap " xs="12" sm="8">
-        <div style="text-align:center" class="order-sm-2 col-sm-6">
+      <h2>About the Puzzle</h2>
+      <div class="d-flex flex-wrap justify-content-between" xs="12" sm="8">
+        <div style="text-align:center" class="order-sm-2 image-col">
           <div class="puzzle-image">
             <img v-if="imageURL" :src="imageURL" />
           </div>
@@ -10,18 +15,24 @@
             type="submit"
             variant="primary"
             class="submit-button"
-            :href="`${puzzleRoute}${pageData.nid}/`"
+            :href="`${puzzleRoute}${puzzle.id}/`"
           >
             {{ $t('puzzle-view:main-action') }}
           </b-button>
         </div>
 
-        <div class="order-sm-1 col-sm-6">
+        <div class="order-sm-1 description-col">
           <hr class="top-border d-sm-none" />
-          <div class="puzzle-description" v-dompurify-html="puzzle.body" />
+          <div
+            class="puzzle-description"
+            style="word-wrap: break-word;"
+            v-dompurify-html="puzzle.body"
+          />
         </div>
       </div>
     </div>
+
+    <Comments :comments="comments" :nid="puzzle.id" />
 
     <template #sidebar="{ isInSidebar }">
       <SidebarPanel
@@ -32,12 +43,16 @@
         <template #header-icon>
           <img src="@/assets/info.svg" />
         </template>
-        <ul style="padding: 0; list-style-type:none">
+        <ul style="padding: 0; list-style-type:none" v-if="puzzle">
+          <li v-if="puzzle['made-by-player']">
+            <img :src="avatar" class="icon" />{{ puzzle.username }}
+          </li>
           <li v-if="puzzle.reward">
             <img src="@/assets/dollar.svg" class="icon" />{{ puzzle.reward }}
           </li>
-          <li v-if="puzzle.audience">
-            <img src="@/assets/people.svg" class="icon" />{{ puzzle.num_cleared }}
+          <li>
+            <img src="@/assets/people.svg" class="icon" />
+            {{ puzzle['num-cleared'] ? puzzle['num-cleared'] : 0 }}
           </li>
           <li v-if="puzzle.created">
             <img src="@/assets/calendar.svg" class="icon" />{{ puzzle.created }}
@@ -47,6 +62,7 @@
       <!-- <TagsPanel :tags="['#SRP', '#easy']" :isInSidebar="isInSidebar" /> -->
     </template>
   </EternaPage>
+  <Preloader v-else style="margin-top: 10rem;" />
 </template>
 
 <script lang="ts">
@@ -55,69 +71,86 @@
   import { AxiosInstance } from 'axios';
   import SidebarPanel from '@/components/Sidebar/SidebarPanel.vue';
   import EternaPage from '@/components/PageLayout/EternaPage.vue';
-  import PageDataMixin from '@/mixins/PageData';
-  import VueDOMPurifyHTML from 'vue-dompurify-html';
   import TagsPanel from '@/components/Sidebar/TagsPanel.vue';
-  // @ts-ignore
-  import get from 'lodash.get';
   import Utils from '@/utils/utils';
   import { PUZZLE_ROUTE_PREFIX } from '@/utils/constants';
-  import PuzzleData from './types';
-
-  Vue.use(VueDOMPurifyHTML);
-
-  async function fetchPageData(route: Route, http: AxiosInstance) {
-    const res = (
-      await http.get(`/get/?type=puzzle&nid=${route.params.id}&script=-1`, {
-        params: {
-          order: route.query.sort,
-          filters: route.query.filters && (route.query.filters as string).split(','),
-        },
-      })
-    ).data.data as PuzzleData;
-    return res;
-  }
+  import Preloader from '@/components/PageLayout/Preloader.vue';
+  import Comments from '@/components/PageLayout/Comments.vue';
+  import FetchMixin from '@/mixins/FetchMixin';
+  import { PuzzleResponse, Puzzle, CommentItem } from '@/types/common-types';
 
   @Component({
     components: {
       EternaPage,
       TagsPanel,
       SidebarPanel,
+      Preloader,
+      Comments,
     },
   })
-  export default class PuzzleView extends Mixins(PageDataMixin(fetchPageData)) {
-
+  export default class PuzzleView extends Mixins(FetchMixin) {
     private puzzleRoute: string = PUZZLE_ROUTE_PREFIX;
 
-    get puzzle() {
-      return {
-        ...get(this.pageData, 'puzzle'),
-        quests: [
-          'https://cdn.zeplin.io/5e88563a3843011f95808b2f/assets/5ED5D090-6F62-4DF8-8C54-CC71306A4B16.png',
-          'https://cdn.zeplin.io/5e88563a3843011f95808b2f/assets/6A70A1E1-9A81-4BA0-B765-A12B8F821300.png',
-          'https://cdn.zeplin.io/5e88563a3843011f95808b2f/assets/E280848F-6347-4CC5-A215-F08B1F55ED1B.png',
-        ],
-      };
+    puzzle: Puzzle | null = null;
+
+    nid: string | null = null;
+
+    comments: CommentItem[] = [];
+
+    async fetch() {
+      const res = (
+        await this.$http.get(`/get/?type=puzzle&nid=${this.$route.params.id}&script=-1`, {
+          params: {
+            order: this.$route.query.sort,
+            filters: this.$route.query.filters && (this.$route.query.filters as string).split(','),
+          },
+        })
+      ).data.data as PuzzleResponse;
+      this.puzzle = res.puzzle;
+      this.nid = res.nid;
+      this.comments = res.comments;
     }
 
     get imageURL() {
-      return Utils.getPuzzleMiddleThumbnail(get(this.pageData, 'nid', ''));
+      return Utils.getPuzzleMiddleThumbnail(this.nid);
+    }
+
+    get avatar() {
+      return Utils.getAvatar(this.puzzle?.userpicture || null);
     }
   }
 </script>
 
 <style scoped lang="scss">
+  @import '@/styles/global.scss';
+
+  .description-col {
+    width: calc(60% - 15px);
+  }
+
+  .image-col {
+    width: 40%;
+  }
+
+  @include media-breakpoint-down(xs) {
+    .description-col, .image-col {
+      width: 100%;
+    }
+  }
+
   .quest-image {
     margin: 15px;
   }
 
   .puzzle-image {
-    width: auto;
-    max-width: 334px;
-    height: 365px;
+    width: 100%;
     background-color: #041227;
-    opacity: 0.8;
-    margin: 0 auto;
+    border-radius: 5px;
+    padding: 1.6rem 2.2rem;
+    img {
+      width: 100%;
+      max-height: 400px;
+    }
   }
 
   .puzzle-description {

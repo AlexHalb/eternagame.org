@@ -6,7 +6,7 @@
         <h4 class="about-me">
           {{ $t('player-view:about-me') }}
         </h4>
-        <p v-dompurify-html="user.Profile" class="about-me-text"></p>
+        <p v-dompurify-html="user.Profile" class="about-me-text" style="word-wrap: break-word;"></p>
       </div>
       <PlayerFeaturedAchievement v-if="user.featuredAchievement" :user="user" />
     </div>
@@ -15,15 +15,13 @@
 
 <script lang="ts">
   import { Component, Vue, Prop } from 'vue-property-decorator';
-  import VueDOMPurifyHTML from 'vue-dompurify-html';
   import PlayerFeaturedAchievement from './PlayerFeaturedAchievement.vue';
-
-  Vue.use(VueDOMPurifyHTML);
+  
   @Component({
     components: { PlayerFeaturedAchievement },
   })
   export default class PlayerAboutMe extends Vue {
-    @Prop() user!: object;
+    @Prop({ required: true }) readonly user!: object;
   }
 </script>
 

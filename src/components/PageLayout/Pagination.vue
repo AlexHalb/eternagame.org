@@ -13,11 +13,9 @@
     },
   })
   export default class Pagination extends Vue {
-    @Prop({ default: 9 })
-    private increment!: number;
+    @Prop({ default: 9 }) readonly increment!: number;
 
-    @Prop({ default: 18 })
-    private initial!: number;
+    @Prop({ default: 18 }) readonly initial!: number;
 
     private search: string = '';
 
@@ -25,21 +23,26 @@
 
     mounted() {
       window.onscroll = () => {
-        const bottomOfWindow = document.documentElement.scrollTop + window.innerHeight + 1
-          >= document.documentElement.offsetHeight;
+        const bottomOfWindow =
+          document.documentElement.scrollTop + window.innerHeight + 1 >=
+          document.documentElement.offsetHeight;
 
         if (bottomOfWindow) {
-          this.loading = true;
-          const oldSize = Number(this.$route.query.size || this.initial);
-          const newSize = String(oldSize + this.increment);
-
-          this.$router.replace({
-            name: this.$route.name!,
-            query: {
-              ...this.$route.query,
-              size: newSize,
-            },
-          });
+          const length = this.$vnode.key;
+          const querySize = Number(this.$route.query.size || this.initial);
+          const newSize = querySize + this.increment;
+          if (querySize === length) {
+            this.$router.replace({
+              name: this.$route.name!,
+              query: {
+                ...this.$route.query,
+                size: String(newSize),
+              },
+              hash: window.location.hash,
+              params: { keepScroll: 'true' }
+            });
+            this.loading = true;
+          }
         }
       };
     }
