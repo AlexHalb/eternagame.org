@@ -5,7 +5,7 @@
 </template>
 
 <script lang="ts">
-  import { Component, Prop, Vue } from 'vue-property-decorator';
+  import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
   import { mixins } from 'vue-class-component';
   import SidebarPanel from '@/components/Sidebar/SidebarPanel.vue';
   import SidebarPanelMixin from '@/mixins/SidebarPanel';
@@ -33,6 +33,15 @@
       if (data && typeof data === 'string') {
         this.selected = data.split(',');
       }
+    }
+
+    get queryFilters() {
+      return this.$route.query.filters;
+    }
+
+    @Watch('queryFilters')
+    updateSelf() {
+      this.selected = (this.$route.query.filters as string).split(',') || this.selected;
     }
 
     async onCheck() {

@@ -57,7 +57,7 @@
   import { VXM } from '@/types/vue.d';
   import { PuzzleList, ClearedPuzzle, PuzzleItem } from '@/types/common-types';
   import FetchMixin from '@/mixins/FetchMixin';
-
+  
   const INITIAL_SORT = 'date';
   const INITIAL_NUMBER = 18;
 

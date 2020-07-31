@@ -2,10 +2,19 @@
   <div class="custom-input-group">
     <input
       type="text"
+      placeholder="author"
+      class="local-search"
+      :value="authorValue"
+      @input="onSearch"
+      ref="authorSearch"
+    >
+    <input
+      type="text"
       :placeholder="placeholder || $t('search:search')"
       class="local-search"
       :value="searchValue"
       @input="onSearch"
+      ref="puzzleSearch"
     />
     <span>
       <img src="@/assets/sidebar/search.svg" />
@@ -14,7 +23,7 @@
 </template>
 
 <script lang="ts">
-  import { Component, Prop, Vue } from 'vue-property-decorator';
+  import { Component, Prop, Vue, Ref } from 'vue-property-decorator';
   import { mixins } from 'vue-class-component';
   import SidebarPanel from '@/components/Sidebar/SidebarPanel.vue';
   import SidebarPanelMixin from '@/mixins/SidebarPanel';
@@ -34,23 +43,51 @@
     private search: string = '';
 
     get searchValue() {
-      return this.search || this.$route.query.search;
+      return this.extractSearch(this.search || this.$route.query.search as string);
     }
 
-    replaceRoute(event: KeyboardEvent) {
+    extractSearch(str: string) {
+      return str?.replace(/:+\S+$/, '').trimStart();
+    }
+
+    get authorValue() {
+      return this.extractAuthor(this.search || this.$route.query.search as string);
+    }
+
+    extractAuthor(str: string) {
+      return str && str.match(/:\S+$/) && str.match(/:\S+$/)![0]
+      ? str.match(/:+\S+$/)![0].replace(/^:/, '')
+      : '';
+    }
+
+    replaceRoute() {
+      if (this.authorSearch.value.trim()) {
+        if (!this.$route.query.filters) this.$route.query.filters = 'player';
+        else if (!(this.$route.query.filters as string).includes('player')) this.$route.query.filters += ',player';
+      } else {
+        this.$route.query.filters = (this.$route.query.filters as string)
+          .split(',')
+          .filter(e => e !== 'player')
+          .join(',');
+      }
       this.$router.replace({
         name: this.$route.name!,
-        query: { ...this.$route.query, search: (event.target as HTMLInputElement).value },
+        query: {
+          ...this.$route.query,
+          search: `${this.puzzleSearch.value}${this.authorSearch.value ? `:${this.authorSearch.value }`: ''}`,
+        },
       });
     }
 
-    craeted() {
-      this.replaceRoute = debounce(this.replaceRoute, 200);
+    debouncedReplaceRoute = debounce(this.replaceRoute, 200);
+
+    onSearch() {
+      this.debouncedReplaceRoute();
     }
 
-    onSearch(event: KeyboardEvent) {
-      this.replaceRoute(event);
-    }
+    @Ref() readonly puzzleSearch !: HTMLInputElement;
+
+    @Ref() readonly authorSearch !: HTMLInputElement;
   }
 </script>
 
