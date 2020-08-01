@@ -2,24 +2,25 @@
   <div class="custom-input-group">
     <input
       type="text"
-      placeholder="author"
-      class="local-search"
-      :value="authorValue"
-      @input="onSearch"
-      ref="authorSearch"
-    >
-    <input
-      type="text"
       :placeholder="placeholder || $t('search:search')"
       class="local-search"
       :value="searchValue"
       @input="onSearch"
       ref="puzzleSearch"
     />
+    <input
+      type="text"
+      placeholder="Author"
+      class="local-search"
+      :value="authorValue"
+      @input="onSearch"
+      ref="authorSearch"
+      v-if="showAuthor"
+    >
     <span id="puzzle-search-icon">
       <img src="@/assets/sidebar/search.svg" />
     </span>
-    <span id="author-search-icon">
+    <span id="author-search-icon" v-if="showAuthor">
       <img src="@/assets/people.svg" />
     </span>
   </div>
@@ -43,6 +44,8 @@
   export default class SearchPanel extends mixins(SidebarPanelMixin) {
     @Prop() readonly placeholder?: string;
 
+    @Prop({ default: false }) showAuthor!: boolean;
+
     private search: string = '';
 
     get searchValue() {
@@ -64,10 +67,10 @@
     }
 
     replaceRoute() {
-      if (this.authorSearch.value.trim()) {
+      if (this.authorSearch.value.trim() && this.showAuthor) {
         if (!this.$route.query.filters) this.$route.query.filters = 'player';
         else if (!(this.$route.query.filters as string).includes('player')) this.$route.query.filters += ',player';
-      } else {
+      } else if (this.showAuthor) {
         this.$route.query.filters = (this.$route.query.filters as string)
           .split(',')
           .filter(e => e !== 'player')
@@ -77,7 +80,8 @@
         name: this.$route.name!,
         query: {
           ...this.$route.query,
-          search: `${this.puzzleSearch.value}${this.authorSearch.value ? `:${this.authorSearch.value }`: ''}`,
+          search: `${this.puzzleSearch.value}${this.authorSearch.value && this.showAuthor
+            ? `:${this.authorSearch.value }`: ''}`,
         },
       });
     }
@@ -103,15 +107,18 @@
   }
 
   .custom-input-group {
-    #author-search-icon {
+    #puzzle-search-icon {
       position: absolute;
       top: 7.375px;
       right: 11.25px;
     }
-    #puzzle-search-icon {
+    #author-search-icon {
       position: absolute;
-      top: 15.750px;
+      top: 51.750px;
       right: 11.25px;
+    }
+    #author-search-icon > img {
+      height: 25.33px;
     }
   }
 </style>

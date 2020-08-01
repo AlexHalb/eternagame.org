@@ -24,6 +24,7 @@
         v-if="isInSidebar"
         :placeholder="$t('search:puzzles')"
         :isInSidebar="isInSidebar"
+        :showAuthor="true"
       />
       <FiltersPanel
         :filters="filters"
