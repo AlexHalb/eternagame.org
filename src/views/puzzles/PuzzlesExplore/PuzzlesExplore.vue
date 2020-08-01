@@ -11,6 +11,10 @@
         />
       </Gallery>
       <Pagination :key="puzzles && puzzles.length" />
+      <div v-if="!puzzles.length">
+        No puzzles found. Try expandanding your search.
+        <p v-if="searchContainsAuthor">If you're searching for an author, try checking the Player Puzzles filter</p>
+      </div>
     </div>
     <div v-else>
       <Preloader />
@@ -57,7 +61,7 @@
   import { VXM } from '@/types/vue.d';
   import { PuzzleList, ClearedPuzzle, PuzzleItem } from '@/types/common-types';
   import FetchMixin from '@/mixins/FetchMixin';
-  
+
   const INITIAL_SORT = 'date';
   const INITIAL_NUMBER = 18;
 
@@ -122,6 +126,11 @@
       return this.cleared.some(puzzle => id === puzzle.id);
     }
 
+    get searchContainsAuthor() {
+      return this.$route.query.search
+        && (this.$route.query.search as string).match(/:\S+$/);
+    }
+
     private options: Option[] = [
       { value: 'date', text: 'side-panel-options:desc' },
       { value: 'date_asc', text: 'side-panel-options:asc' },
@@ -132,8 +141,8 @@
 
     // TODO add additional filters in backend: https://app.clubhouse.io/vital-mind-media/story/755/make-filters-for-all-pages-work
     private filters: Filter[] = [
-      { value: 'challenge', text: 'Challenge' },
-      { value: 'player', text: 'Player' },
+      { value: 'challenge', text: 'Challenge Puzzles' },
+      { value: 'player', text: 'Made by Players' },
       { value: 'single', text: 'Single State' },
       // { value: '2-state', text: '2-state switch' },
       // { value: '3-state', text: '3-state switch' },

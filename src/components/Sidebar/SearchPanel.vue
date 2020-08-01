@@ -16,8 +16,11 @@
       @input="onSearch"
       ref="puzzleSearch"
     />
-    <span>
+    <span id="puzzle-search-icon">
       <img src="@/assets/sidebar/search.svg" />
+    </span>
+    <span id="author-search-icon">
+      <img src="@/assets/people.svg" />
     </span>
   </div>
 </template>
@@ -100,9 +103,14 @@
   }
 
   .custom-input-group {
-    span {
+    #author-search-icon {
       position: absolute;
       top: 7.375px;
+      right: 11.25px;
+    }
+    #puzzle-search-icon {
+      position: absolute;
+      top: 15.750px;
       right: 11.25px;
     }
   }

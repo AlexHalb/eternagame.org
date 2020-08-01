@@ -41,7 +41,9 @@
 
     @Watch('queryFilters')
     updateSelf() {
-      this.selected = (this.$route.query.filters as string).split(',') || this.selected;
+      if (this.$route.query && this.$route.query.filters) {
+        this.selected = (this.$route.query.filters as string).split(',') || this.selected;
+      }
     }
 
     async onCheck() {
