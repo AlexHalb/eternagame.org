@@ -51,7 +51,7 @@
 
     private search: string = '';
 
-    searchValue = this.extractSearch(this.search || this.$route.query.search as string);
+    searchValue = this.extractSearch(this.search || this.$route.query.search as string) || null;
 
     extractSearch(str: string) {
       return str
