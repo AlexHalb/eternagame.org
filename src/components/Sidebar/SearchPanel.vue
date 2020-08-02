@@ -4,7 +4,7 @@
       type="text"
       :placeholder="placeholder || $t('search:search')"
       class="local-search"
-      :value="searchValue"
+      v-model="searchValue"
       @input="onSearch"
       ref="puzzleSearch"
     />
@@ -12,11 +12,12 @@
       type="text"
       placeholder="Author"
       class="local-search"
-      :value="authorValue"
+      v-model="authorValue"
       @input="onSearch"
       ref="authorSearch"
       v-if="showAuthor"
     >
+    <b-form-select :options="engineOptions" v-model="folder" @input="onSearch"/>
     <span id="puzzle-search-icon">
       <img src="@/assets/sidebar/search.svg" />
     </span>
@@ -45,56 +46,70 @@
     @Prop() readonly placeholder?: string;
 
     @Prop({ default: false }) showAuthor!: boolean;
+  
+    @Prop({ default: false }) showEngineDropdown!: boolean;
 
     private search: string = '';
 
-    get searchValue() {
-      return this.extractSearch(this.search || this.$route.query.search as string);
-    }
+    searchValue = this.extractSearch(this.search || this.$route.query.search as string);
 
     extractSearch(str: string) {
-      return str?.replace(/:+\S+$/, '').trimStart();
+      return str
+        ?.replace(/:\S+$/, '')
+        .replace(/^\[.+\]/, '')
+        .trimStart();
     }
 
-    get authorValue() {
-      return this.extractAuthor(this.search || this.$route.query.search as string);
-    }
+    authorValue = this.extractAuthor(this.search || this.$route.query.search as string);
 
-    extractAuthor(str: string) {
+    extractAuthor(str: string) { // Gets the author from the search
       return str && str.match(/:\S+$/) && str.match(/:\S+$/)![0]
-      ? str.match(/:+\S+$/)![0].replace(/^:/, '')
+      ? str.match(/:\S+$/)![0].replace(/^:/, '')
       : '';
     }
 
+    folder: string | null = this.extractEngine(this.search || this.$route.query.search as string);
+
+    extractEngine(str: string) { // Gets the engine from the search
+      return str && str.match(/\[.+]/) && str.match(/\[.+\]/)![0] || null;
+    }
+
     replaceRoute() {
-      if (this.authorSearch.value.trim() && this.showAuthor) {
+      // Add the player puzzles filter if not already (fixes bug where searching by player only displays results if player puzzles are checked)
+      if (this.authorValue.trim() && this.showAuthor) {
         if (!this.$route.query.filters) this.$route.query.filters = 'player';
         else if (!(this.$route.query.filters as string).includes('player')) this.$route.query.filters += ',player';
       } else if (this.showAuthor) {
-        this.$route.query.filters = (this.$route.query.filters as string)
+        this.$route.query.filters = (this.$route.query.filters as string) || ''
           .split(',')
           .filter(e => e !== 'player')
           .join(',');
       }
+
+      const searchFolder = this.folder ? `[${this.folder}]`.replace(/\[{2,}/, '').replace(/\]{2,}/, '') : '';
+      const searchAuthor = this.authorValue && this.showAuthor? `:${this.authorValue }`: '';
       this.$router.replace({
         name: this.$route.name!,
         query: {
           ...this.$route.query,
-          search: `${this.puzzleSearch.value}${this.authorSearch.value && this.showAuthor
-            ? `:${this.authorSearch.value }`: ''}`,
+          search: `${searchFolder}${this.searchValue}${searchAuthor}`,
         },
       });
     }
 
-    debouncedReplaceRoute = debounce(this.replaceRoute, 200);
+    onSearch = debounce(this.replaceRoute, 200);
 
-    onSearch() {
-      this.debouncedReplaceRoute();
-    }
-
-    @Ref() readonly puzzleSearch !: HTMLInputElement;
-
-    @Ref() readonly authorSearch !: HTMLInputElement;
+    engineOptions = [
+      { 'text': 'No engine selected', value: null},
+      { 'text': 'Vienna', value: 'VRNA_1'},
+      { 'text': 'Vienna2', value: 'VRNA_2'},
+      { 'text': 'NuPACK', value: 'NuPACK'},
+      { 'text': 'LinearFoldV', value: 'LFV'},
+      { 'text': 'LinearFoldC', value: 'LFC'},
+      { 'text': 'Contrafold', value: 'CONTRA'},
+      { 'text': 'LinearFoldE', value: 'LFE'},
+      { 'text': 'EternaFold', value: 'EFOLD'},
+    ];
   }
 </script>
 

@@ -25,6 +25,7 @@
         :placeholder="$t('search:puzzles')"
         :isInSidebar="isInSidebar"
         :showAuthor="true"
+        :showEngineDropdown="true"
       />
       <FiltersPanel
         :filters="filters"
