@@ -40,6 +40,11 @@
         replace
         :isInSidebar="isInSidebar"
       />
+      <div v-if="showTopShortcut" class="position-fixed mb-1" style="bottom: 0px; width: auto">
+        <b-button variant="primary">
+          Scroll to top
+        </b-button>
+      </div>
     </template>
     <template #mobileSearchbar>
       <SearchPanel :placeholder="$t('search:puzzles')" :isInSidebar="false" />
@@ -155,6 +160,15 @@
       // { value: 'switch', text: 'Switch' },
       { value: 'notcleared', text: 'Uncleared' },
     ];
+
+    showTopShortcut = false;
+
+    created() {
+      window.addEventListener('scroll', () => {
+        console.log(2);
+        this.showTopShortcut =  document.documentElement.scrollTop > 500;
+      });
+    }
 
   // private tags: string[] = ['#Switch', '#Ribosome', '#XOR', '#MS2', '#tRNA', '#mRNA'];
   }
